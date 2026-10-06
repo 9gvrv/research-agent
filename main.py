@@ -4,15 +4,29 @@ from pathlib import Path
 
 import httpx
 from dotenv import load_dotenv
+from google import genai
 from trafilatura import extract, fetch_url
 
 from commands.clear_terminal import clear_terminal
 
 dotenv_path = Path("./.env")
 load_dotenv(dotenv_path=dotenv_path)
-
+gemini_api_key = os.getenv("GEMINI_API_KEY")
 searxng_search_engine_url = os.getenv("SEARXNG_URL")
 print(repr(searxng_search_engine_url))
+client = genai.Client(api_key=gemini_api_key)
+
+
+async def research_router(query: str):
+    print("pondering...")
+    with open("./prompts/research_router.md", "r", encoding="utf-8") as f:
+        system_prompt_content = f.read()
+
+    interaction = await client.aio.interactions.create(
+        model="gemini-2.5-flash", system_instruction=system_prompt_content, input=query
+    )
+
+    return interaction.output_text
 
 
 async def search_searxng(query: str):
@@ -27,9 +41,7 @@ async def search_searxng(query: str):
 
 async def fetch_page(url: str):
     downloaded = fetch_url(url)
-
     text = extract(downloaded, output_format="markdown", with_metadata=True)
-
     return text
 
 
@@ -48,19 +60,22 @@ async def main():
                     print("Help menu")
         else:
             print(f"User input: {user_input}\n$", end="")
-            results = await search_searxng(user_input)
-            urls = []
-            for r in results[:10]:
-                print(r["title"], "→", r["url"])
-                urls.append(r["url"])
+            print(await research_router(user_input))
 
-            data = []
-            print("Searching web....")
-            for url in urls:
-                res = await fetch_page(url)
-                data.append(res)
 
-            print(f"========== Result ==========\n{data}")
+#             results = await search_searxng(user_input)
+#             urls = []
+#             for r in results[:10]:
+#                 print(r["title"], "→", r["url"])
+#                 urls.append(r["url"])
+#
+#             data = []
+#             print("Searching web....")
+#             for url in urls:
+#                 res = await fetch_page(url)
+#                 data.append(res)
+#
+#             print(f"========== Result ==========\n{data}")
 
 
 asyncio.run(main())
