@@ -1,11 +1,12 @@
 import asyncio
 import os
-from email.policy import default
 from pathlib import Path
 
 import httpx
 from dotenv import load_dotenv
 from trafilatura import extract, fetch_url
+
+from commands.clear_terminal import clear_terminal
 
 dotenv_path = Path("./.env")
 load_dotenv(dotenv_path=dotenv_path)
@@ -41,6 +42,8 @@ async def main():
             match user_input:
                 case "/exit":
                     break
+                case "/clear":
+                    clear_terminal()
                 case _:
                     print("Help menu")
         else:
