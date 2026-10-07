@@ -10,6 +10,7 @@ from groq import Groq
 from trafilatura import extract, fetch_url
 
 from commands.clear_terminal import clear_terminal
+from web_processor import process_urls
 
 dotenv_path = Path("./.env")
 load_dotenv(dotenv_path=dotenv_path)
@@ -17,6 +18,50 @@ gemini_api_key = os.getenv("GEMINI_API_KEY2")
 searxng_search_engine_url = os.getenv("SEARXNG_URL")
 print(repr(searxng_search_engine_url))
 client = genai.Client(api_key=gemini_api_key)
+
+
+def fake_research_router(query: str, return_response: int) -> str:
+    responses = {
+        1: {
+            "action": "answer",
+            "reason": "The query can be answered reliably without current external information.",
+            "answer": "A Python decorator modifies or extends the behavior of another function.",
+            "queries": [],
+            "clarification": "",
+        },
+        2: {
+            "action": "research",
+            "reason": "The query depends on current information, so web research would meaningfully improve the answer.",
+            "answer": "",
+            "queries": [
+                "latest React release changes 2026",
+                "React developer discussion latest release",
+            ],
+            "clarification": "",
+        },
+        3: {
+            "action": "clarify",
+            "reason": "The query is too ambiguous to determine the user's intended question.",
+            "answer": "",
+            "queries": [],
+            "clarification": "Could you clarify what you would like to know?",
+        },
+        4: {
+            "action": "research",
+            "reason": "The query concerns a specific current topic where external sources would improve the answer.",
+            "answer": "",
+            "queries": [
+                "Claude Code latest developer discussion 2026",
+                "Claude Code official documentation",
+            ],
+            "clarification": "",
+        },
+    }
+
+    if return_response not in responses:
+        raise ValueError("return_response must be 1, 2, 3, or 4")
+
+    return json.dumps(responses[return_response])
 
 
 async def research_router(query: str):
@@ -86,13 +131,10 @@ async def main():
         else:
             print(f"User input: {user_input}\n$", end="")
             research_router_response_string = await research_router_openai(user_input)
-
-            print(type(research_router_response_string))
+            # research_router_response_string = fake_research_router(
+            #     "latest news", return_response=2
+            # )
             research_router_response = json.loads(research_router_response_string)
-            print(
-                f"type of research_router_response : {type(research_router_response)}"
-            )
-            print(f"research_router_response: f{research_router_response}")
 
             match research_router_response["action"]:
                 case "answer":
@@ -105,6 +147,12 @@ async def main():
                         urls.extend(o)
 
                     print(f"Researching...\n {urls}")
+                    data = []
+                    print("Searching web....")
+                    documents = await process_urls(urls)
+                    for document in documents:
+                        print(document.to_llm())
+                        print()
 
 
 #             results = await search_searxng(user_input)
