@@ -69,11 +69,9 @@ async def research_router(query: str):
     with open("./prompts/research_router.md", "r", encoding="utf-8") as f:
         system_prompt_content = f.read()
 
-    print("starting research_router interaction api")
     interaction = await client.aio.interactions.create(
         model="gemini-2.5-flash", system_instruction=system_prompt_content, input=query
     )
-    print("research_router interaction api completed")
 
     return interaction.output_text
 
@@ -109,6 +107,34 @@ async def search_searxng(query: str, limit: int = 3):
     ]
 
 
+async def summarise_research(query: str):
+    print("summarising...")
+    with open("./prompts/summarise_report.md", "r", encoding="utf-8") as f:
+        system_prompt_content = f.read()
+
+    interaction = await client.aio.interactions.create(
+        model="gemini-2.5-flash", system_instruction=system_prompt_content, input=query
+    )
+
+    return interaction.output_text
+
+
+async def summarise_research_openai(context: str):
+    print("summarising...")
+    with open("./prompts/summarise_report.md", "r", encoding="utf-8") as f:
+        system_prompt_content = f.read()
+    client = Groq()
+    response = client.chat.completions.create(
+        model="openai/gpt-oss-20b",
+        messages=[
+            {"role": "system", "content": f"{system_prompt_content}"},
+            {"role": "user", "content": f"{context}"},
+        ],
+    )
+
+    return response.choices[0].message.content
+
+
 async def fetch_page(url: str):
     downloaded = fetch_url(url)
     text = extract(downloaded, output_format="markdown", with_metadata=True)
@@ -130,10 +156,8 @@ async def main():
                     print("Help menu")
         else:
             print(f"User input: {user_input}\n$", end="")
-            research_router_response_string = await research_router_openai(user_input)
-            # research_router_response_string = fake_research_router(
-            #     "latest news", return_response=2
-            # )
+            research_router_response_string = await research_router(user_input)
+
             research_router_response = json.loads(research_router_response_string)
 
             match research_router_response["action"]:
@@ -150,24 +174,7 @@ async def main():
                     data = []
                     print("Searching web....")
                     documents = await process_urls(urls)
-                    for document in documents:
-                        print(document.to_llm())
-                        print()
-
-
-#             results = await search_searxng(user_input)
-#             urls = []
-#             for r in results[:10]:
-#                 print(r["title"], "→", r["url"])
-#                 urls.append(r["url"])
-#
-#             data = []
-#             print("Searching web....")
-#             for url in urls:
-#                 res = await fetch_page(url)
-#                 data.append(res)
-#
-#             print(f"========== Result ==========\n{data}")
+                    print(await summarise_research(str(documents)))
 
 
 asyncio.run(main())
