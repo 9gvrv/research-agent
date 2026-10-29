@@ -1,0 +1,8 @@
+node_modules
+dist
+coverage
+.env
+pnpm-lock.yaml
+
+# Vendored third-party agent skills - do not reformat
+.agents
