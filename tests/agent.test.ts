@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { MockLanguageModelV4 } from 'ai/test';
-import { ask, DEFAULT_MODEL_ID } from './agent.js';
+import { ask, DEFAULT_MODEL_ID } from '../src/agent.js';
 
 function mockModel(text: string) {
   const calls: unknown[] = [];

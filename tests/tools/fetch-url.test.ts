@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { extractTitle, fetchUrl, htmlToText } from './fetch-url.js';
+import { extractTitle, fetchUrl, htmlToText } from '../../src/tools/fetch-url.js';
 
 function htmlResponse(body: string, status = 200) {
   return new Response(body, { status, headers: { 'content-type': 'text/html' } });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseEnv } from './env.js';
+import { parseEnv } from '../src/env.js';
 
 const valid = { GEMINI_API_KEY: 'gemini-key', GROQ_API_KEY: 'groq-key' };
 
