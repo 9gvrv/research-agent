@@ -16,5 +16,10 @@ wheels/
 # Log files
 *.log
 
+# Node
+node_modules/
+dist/
+coverage/
+
 # Agents
 AGENTS.md
